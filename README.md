@@ -1,6 +1,12 @@
 ngx_http_subrange_module
 ========================
 
+
+当Nginx作为文件下载服务的反向代理,用户请求一个非常大的文件的时候,它会一直占满反向代理服务器与后端主机之间的带宽。因为nginx一次获取整个文件,缓冲获取到的文件,导致客户端不能马上读取到。带宽使用和iowait会很高。
+
+ngx_http_subrange_module就是为了解决这个问题，它能分割HTTP requests。将大数据量的HTTP请求切分为多个子请求，当下载一个1 G的文件,subrange将从后端主机中下载文件块，比如先获取5 M，然后再获取5 M,直到客户端下载完整个文件。
+
+
 [![Build Status](https://travis-ci.org/shafreeck/ngx_http_subrange_module.svg?branch=master)](https://travis-ci.org/shafreeck/ngx_http_subrange_module)
 
 Split one big download file request to multiple subrange requests to avoid geting too
