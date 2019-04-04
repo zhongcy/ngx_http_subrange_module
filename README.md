@@ -60,6 +60,19 @@ It is trivial to implement it yourself.
 We just have one directive `subrange` which sets the size of chunk being fetched at a
 time. The directive takes a `size` as the parameter(1024 or 1k), or a variable as
 well. 0 meas disable subrange.
+
+简介：
+当 Nginx 用作文件下载服务的反向代理时，当用户请求非常大的文件时，它将始终耗尽 Nginx 和上游之间的带宽。 这是因为 Nginx 一次获取整个文件并缓冲客户端不能时间读取的左数据。 带宽会耗尽，磁盘iowait也会很高。
+
+Nginx 具有关闭缓冲区机制的选项，例如设置 proxy_buffering off 或者 fastcgi_buffering off，这个指令取决于上游的类型。 然而，这带来了一个问题。 如果你的上游是PHP或者 Java，它将阻止你的has进程或者yourJava线程，特别是当客户端下载一个很大的文件。
+
+子区域模块是为了解决这个问题而创建的。 它分割你的HTTP请求。 下载 1G 文件时，模块将从上游下载一个文件块，例如下载 5M，然后再下载下一个文件，直到客户端收到整个文件。 整个过程对客户是不敏感的。 你可以在 Nginx 配置文件中设置区块大小。
+
+模块设置 HTTP 范围 header 执行一个范围请求，从上游获取一个区块。 因此上游需求需要范围请求的支持。 支持 Range 很简单，像 Nginx/apache这样的所有标准HTTP服务器都实现了。 你自己实现它很简单。
+
+我们只有一个指令 subrange，它设置每次提取块的大小。 指令接受 size 作为参数( 1024或者 1 k )，也接受变量。 0 meas禁用子范围。
+
+
 ```
 set $size 10m;
 location /download{
